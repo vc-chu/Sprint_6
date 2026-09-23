@@ -12,27 +12,30 @@ import java.util.List;
 
 public class MainPage {
 
+    // URL главной страницы сервиса
+    public static final String SCOOTER_URL =
+            "https://qa-scooter.education-services.ru/";
+
     private final WebDriver driver;
     private final WebDriverWait wait;
 
     // Главная страница
     private final By page = By.tagName("body");
 
-    // Кнопка «Заказать» сверху
+    // Кнопка «Заказать» в верхней части страницы
     private final By topOrderButton = By.xpath(
             "(//button[text()='Заказать'])[1]"
     );
 
-    // Кнопка «Заказать» снизу
+    // Кнопка «Заказать» в нижней части страницы
     private final By bottomOrderButton = By.xpath(
             "(//button[text()='Заказать'])[2]"
     );
 
-    // Вопросы
-    private final By faqQuestions = By.className("accordion__button");
-
-    // Ответы
-    private final By faqAnswers = By.className("accordion__panel");
+    // Вопросы раздела «Вопросы о важном»
+    private final By faqQuestions = By.className(
+            "accordion__button"
+    );
 
     // Cookie-панель
     private final By cookieBanner = By.className(
@@ -41,59 +44,77 @@ public class MainPage {
 
     public MainPage(WebDriver driver) {
         this.driver = driver;
-        this.wait = new WebDriverWait(driver, Duration.ofSeconds(10));
+        this.wait = new WebDriverWait(
+                driver,
+                Duration.ofSeconds(10)
+        );
     }
 
+    // Открыть главную страницу
     public void open() {
-        driver.get("https://qa-scooter.education-services.ru/");
+        driver.get(SCOOTER_URL);
 
-        wait.until(ExpectedConditions.visibilityOfElementLocated(page));
+        wait.until(ExpectedConditions.visibilityOfElementLocated(
+                page
+        ));
 
         closeCookieBanner();
     }
 
+    // Удалить cookie-панель, если она перекрывает элементы страницы
     public void closeCookieBanner() {
-        JavascriptExecutor js = (JavascriptExecutor) driver;
+        List<WebElement> banners = driver.findElements(cookieBanner);
 
-        js.executeScript(
-                "const banner = document.querySelector('.App_CookieConsent__1yUIN');" +
-                        "if (banner) {" +
-                        "    banner.remove();" +
-                        "}"
-        );
+        if (!banners.isEmpty() && banners.get(0).isDisplayed()) {
+            ((JavascriptExecutor) driver).executeScript(
+                    "arguments[0].remove();",
+                    banners.get(0)
+            );
+        }
 
         wait.until(ExpectedConditions.invisibilityOfElementLocated(
                 cookieBanner
         ));
     }
 
+    // Кликнуть по верхней кнопке «Заказать»
     public void clickTopOrderButton() {
         wait.until(ExpectedConditions.elementToBeClickable(
                 topOrderButton
         )).click();
     }
 
+    // Кликнуть по нижней кнопке «Заказать»
     public void clickBottomOrderButton() {
         wait.until(ExpectedConditions.elementToBeClickable(
                 bottomOrderButton
         )).click();
     }
 
+    // Кликнуть по вопросу из FAQ по его порядковому номеру
     public void clickFaqQuestion(int index) {
-        wait.until(ExpectedConditions.elementToBeClickable(
-                faqQuestions
-        ));
+        List<WebElement> questions = wait.until(
+                ExpectedConditions.visibilityOfAllElementsLocatedBy(
+                        faqQuestions
+                )
+        );
 
-        driver.findElements(faqQuestions)
-                .get(index)
-                .click();
+        wait.until(ExpectedConditions.elementToBeClickable(
+                questions.get(index)
+        )).click();
     }
 
-    public String getFaqAnswer(int index) {
-        List<WebElement> answers = driver.findElements(faqAnswers);
+    // Сформировать локатор ответа FAQ по номеру вопроса
+    private By getFaqAnswerLocator(int index) {
+        return By.id("accordion__panel-" + index);
+    }
 
-        return wait.until(ExpectedConditions.visibilityOf(
-                answers.get(index)
+    // Получить текст открытого ответа FAQ
+    public String getFaqAnswer(int index) {
+        By answerLocator = getFaqAnswerLocator(index);
+
+        return wait.until(ExpectedConditions.visibilityOfElementLocated(
+                answerLocator
         )).getText();
     }
 }

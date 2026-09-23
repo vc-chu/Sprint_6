@@ -8,6 +8,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import pages.MainPage;
 import pages.OrderPage;
@@ -79,7 +80,10 @@ public class OrderTest {
 
         orderPage.confirmOrder();
 
-        assertTrue(orderPage.isOrderCreated());
+        assertTrue(
+                orderPage.getOrderStatusText().contains("Заказ оформлен"),
+                "Сообщение об успешном создании заказа не появилось"
+        );
     }
 
     static Stream<Arguments> orderData() {

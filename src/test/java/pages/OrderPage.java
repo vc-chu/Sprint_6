@@ -87,6 +87,11 @@ public class OrderPage {
             "Order_Modal__YZ-d3"
     );
 
+    // Заголовок всплывающего окна с подтверждением заказа
+    private final By orderStatus = By.xpath(
+            "//div[contains(@class, 'Order_ModalHeader')]"
+    );
+
     public OrderPage(WebDriver driver) {
         this.driver = driver;
         this.wait = new WebDriverWait(
@@ -211,12 +216,10 @@ public class OrderPage {
         )).click();
     }
 
-    // Проверка окна успешного создания заказа
-    public boolean isOrderCreated() {
-        return wait.until(
-                ExpectedConditions.visibilityOfElementLocated(
-                        successModal
-                )
-        ).isDisplayed();
+    // Получить текст сообщения после оформления заказа
+    public String getOrderStatusText() {
+        return wait.until(ExpectedConditions.visibilityOfElementLocated(
+                orderStatus
+        )).getText();
     }
 }
